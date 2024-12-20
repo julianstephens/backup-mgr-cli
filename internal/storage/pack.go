@@ -90,7 +90,7 @@ func (p *Pack) Blobs() []Blob {
 	return p.data
 }
 
-func (p *Pack) Close(sessionKey *crypto.Key) error {
+func (p *Pack) Finalize(sessionKey *crypto.Key) error {
 	p.m.Lock()
 	defer p.m.Unlock()
 

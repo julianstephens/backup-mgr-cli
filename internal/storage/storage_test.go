@@ -92,30 +92,64 @@ func TestPack(t *testing.T) {
 	store := createAndInitStore(context.Background(), t)
 	k := store.Key().Decrypt()
 
+	sessionKey, err := crypto.NewSessionKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var buf bytes.Buffer
 	p := NewPack(k, &buf)
 
 	testData := []byte(gofakeit.Paragraph(10, 5, 12, "\n"))
-	encData, err := crypto.Encrypt(*k, testData, nil)
+	encData, err := crypto.Encrypt(*sessionKey, testData, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b := NewBlob(encData, Data, 0, 0)
-	_, err = p.Append(*b)
+	b1 := NewBlob(encData, Data, 0, 0)
+	_, err = p.Append(*b1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	key, err := crypto.NewSessionKey()
+	if p.Size() != uint(b1.Length) {
+		t.Fatalf("expected pack size %d, got %d", b1.Length, p.Size())
+	}
+
+	compressedTestData := warden.Compress(testData)
+	encCompressed, err := crypto.Encrypt(*sessionKey, compressedTestData, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = p.Close(key)
+	b2 := NewBlob(encCompressed, CompressedData, uint(len(testData)), p.Size())
+	_, err = p.Append(*b2)
 	if err != nil {
 		t.Fatal(err)
 	}
+	if p.Size() != uint(b1.Length+b2.Length) {
+		t.Fatalf("expected pack size %d, got %d", b1.Length+b2.Length, p.Size())
+	}
+
+	blobs := p.Blobs()
+
+	if len(blobs) != 2 {
+		t.Fatalf("expected 2 blobs in pack, got %d", len(blobs))
+	}
+
+	if blobs[0].ID.String() != b1.ID.String() {
+		t.Fatal("first blob IDs do not match")
+	}
+
+	if blobs[1].ID.String() != b2.ID.String() {
+		t.Fatal("second blob IDs do not match")
+	}
+
+	err = p.Finalize(sessionKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	os.RemoveAll(testStore)
 }
 

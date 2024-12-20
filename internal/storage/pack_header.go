@@ -115,7 +115,7 @@ func buildHeaderData(blobs []Blob) (header []byte, err error) {
 
 func verifyHeader(key *crypto.Key, sessionKey *crypto.Key, header []byte, blobs []Blob) (err error) {
 	if len(header) > MaxHeaderSize {
-		err = &warden.InvalidHeaderError{Msg: warden.StringPtr("header is too larger")}
+		err = &warden.InvalidHeaderError{Msg: warden.StringPtr("header is too large")}
 		return
 	}
 
@@ -126,6 +126,7 @@ func verifyHeader(key *crypto.Key, sessionKey *crypto.Key, header []byte, blobs 
 
 	if !sessionKey.Equals(decodedKey) {
 		err = &warden.InvalidHeaderError{Msg: warden.StringPtr("parsed session key does not match actual key")}
+		return
 	}
 
 	if len(decodedBlobs) != len(blobs) {
@@ -136,10 +137,11 @@ func verifyHeader(key *crypto.Key, sessionKey *crypto.Key, header []byte, blobs 
 	for i, b := range blobs {
 		if b.ID.String() != decodedBlobs[i].ID.String() {
 			err = &warden.InvalidHeaderError{Msg: warden.StringPtr("parsed blob id does not match expected")}
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
 func parseHeaderData(rdr *bytes.Reader) (res []Blob, err error) {
@@ -166,7 +168,8 @@ func parseHeaderData(rdr *bytes.Reader) (res []Blob, err error) {
 		b.Length = uint(bLen)
 
 		if b.Type == CompressedData {
-			if err = binary.Read(rdr, binary.LittleEndian, &b.UncompressedLength); err != nil {
+			uncompressedLen := uint32(b.UncompressedLength)
+			if err = binary.Read(rdr, binary.LittleEndian, &uncompressedLen); err != nil {
 				return
 			}
 		}
