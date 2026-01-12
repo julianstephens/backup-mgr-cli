@@ -37,6 +37,8 @@ type Backend interface {
 	Save(ctx context.Context, event Event, reader IReader) error
 	// ListSnapshots retrieves all backup snapshots for a store
 	ListSnapshots(ctx context.Context) ([]storage.Snapshot, error)
+	// Exists determines whether a specified resource is on the backup medium
+	Exists(ctx context.Context, resource_type string, resource_id string) (bool, error)
 }
 
 type WardenBackend struct {
@@ -45,4 +47,4 @@ type WardenBackend struct {
 	Name    string
 }
 
-var Resources = []string{"masterkey", "config"}
+var Resources = []string{"masterkey", "config", "blob"}

@@ -3,7 +3,7 @@ package crypto
 import (
 	"fmt"
 
-	"github.com/alecthomas/units"
+	"github.com/julianstephens/warden/internal/warden"
 )
 
 type Params struct {
@@ -15,9 +15,9 @@ type Params struct {
 
 var DefaultParams = Params{
 	T: 1,
-	M: int(64 * units.KiB),
+	M: int(64 * warden.KiB),
 	P: 4,
-	L: keySize,
+	L: KeySize,
 }
 
 func (p *Params) ToMap() map[string]int {

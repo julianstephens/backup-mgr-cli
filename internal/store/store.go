@@ -16,6 +16,7 @@ type Store struct {
 	conf     warden.Config
 	backend  common.Backend
 	master   *Key
+	session  *crypto.Key
 	Location string
 }
 

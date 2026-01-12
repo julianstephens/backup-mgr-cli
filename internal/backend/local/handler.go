@@ -19,6 +19,16 @@ var (
 	ErrNoStoreLocation   = errors.New("no store location provided")
 )
 
+func write(filename string, reader *common.ByteReader) (err error) {
+	warden.Log.Debug().Msgf("writing %s", filename)
+	err = writeBytes(filename, reader.Reader, reader.Len)
+	if err != nil {
+		return
+	}
+	warden.Log.Debug().Msg("write successful.")
+	return
+}
+
 func (h *LocalHandler) WriteConfig(ctx context.Context, reader common.IReader) error {
 	bReader, ok := reader.(*common.ByteReader)
 	if !ok {
@@ -26,17 +36,15 @@ func (h *LocalHandler) WriteConfig(ctx context.Context, reader common.IReader) e
 	}
 
 	loc := getCtxLocation(ctx, LocationCtxKey("location"))
-	if loc == nil {
+	if loc == nil || loc == "" {
 		return ErrNoStoreLocation
 	}
 
 	filePath := path.Join(loc.(string), "config.json")
-	warden.Log.Debug().Msgf("writing %s", filePath)
-	err := writeBytes(filePath, bReader.Reader, bReader.Len)
+	err := write(filePath, bReader)
 	if err != nil {
 		return err
 	}
-	warden.Log.Debug().Msg("write successful.")
 
 	return nil
 }
@@ -58,12 +66,10 @@ func (h *LocalHandler) WriteKey(ctx context.Context, filename string, reader com
 	}
 
 	keyfileLoc := path.Join(loc.(string), "keys", filename)
-	warden.Log.Debug().Msgf("writing %s", keyfileLoc)
-	err = writeBytes(keyfileLoc, bReader.Reader, bReader.Len)
+	err = write(keyfileLoc, bReader)
 	if err != nil {
 		return err
 	}
-	warden.Log.Debug().Msg("write successful.")
 
 	return nil
 }

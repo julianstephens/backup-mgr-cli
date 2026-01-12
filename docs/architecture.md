@@ -2,8 +2,8 @@
 
 ## Terminology
 
-- pack: a collection of compressed and encrypted chunks
-- blob: stored data (chunks or packs)
+- pack: a collection of chunks
+- chunk: byte data
 - snapshot: the state of a directory backed up at some point in time
 
 ### Encryption/Decryption
@@ -39,30 +39,52 @@
   - enlarges minimum chunk sized for higher CDC speed
   - normalized chunking to reduce chunks with sizes at the poles
 
+## Packing
+
+### Pack Format
+
+```
+Blob1 | ... | BlobN | Header | KeyLength | HeaderLength
+```
+
+### Pack Header
+
+```
+headerData Blob1 | ... | headerData BlobN | encrypted session key |
+```
+
+```go
+type headerData struct {
+	Type               uint8
+	Length             uint32
+	UncompressedLength uint32
+	ID                 warden.ID
+}
+```
+
+#### Header Creation
+
+1. create buf with capacity = # of blobs \* uncompressed blob data size
+2. for each blob build header data and id and append to buf
+3. encrypt buf
+4. append encrypted buf len and encrypted session key to encrypted buf
+5. verify header
+
+#### Header Verification
+
+1. read header data and length from end
+2. ensure header length is non-zero and not too small or too large
+3. read blobs from header data
+4. ensure number of decoded blobs matches number of expected blobs
+5. ensure decoded blob ids match expected ids
+
 ## Backups
 
-```py
-def backup(backup_dir):
-  latest_snapshot = get_latest_snapshot(backup_dir)
-
-  filesToBackup, filesToCopy = get_all_files(backup_dir)
-
-  for file in files:
-      pack = []
-      for chunk in chuker.chunk(file):
-          filename = hash(chunk)
-
-          if exists(filename):
-              continue
-
-          to_store = compressAndEncrypt(chunk)
-          if len(to_store) >= min_pack_size:
-              write(filename, to_store)
-
-          pack.append(chunk)
-          if len(pack) >= min_pack_size:
-              write(filename, pack)
-              pack = []
-
-  createSnapshot(backup_dir)
-```
+1. get the lastest snapshot for backup path
+2. for each file in backup path, if file has not been modified since last snapshot, then copy to new snapshot and go to next file. else continue
+   1. for each chunk in the chunked file, calculate hash
+      1. if the hash exists in a previous snapshot or in the backup medium, copy it's pack metadata and go to next chunk. else continue to step 2
+      2. compress and encrypt chunk
+      3. store chunk as blob or append to pack
+      4. if pack size is >= min pack size, store pack and add metadata to new snapshot
+3. chunk, compress, encrypt, and store new snapshot

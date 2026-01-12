@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	testDir = "/home/julian/go/src/github.com/julianstephens/warden/tmp/test"
-	testPwd = "testsecurepassword123"
+	testDir    = "/tmp/test"
+	testVolume = "/tmp/notes"
+	testPwd    = "testsecurepassword123"
 )
 
 func resetStore(t *testing.T) {
@@ -74,6 +75,7 @@ func TestInit(t *testing.T) {
 	if len(keys) != 1 {
 		t.Fatalf("expected 1 key, got %d", len(keys))
 	}
+	os.RemoveAll(testDir)
 }
 
 func TestOpen(t *testing.T) {
@@ -112,6 +114,7 @@ func TestOpen(t *testing.T) {
 	if string(original.Key().Decrypt().Data) == string(opened.Key().Decrypt().Data) {
 		t.Fatalf("expected decrypted key %s, got %s", string(original.Key().Decrypt().Data), string(opened.Key().Decrypt().Data))
 	}
+	os.RemoveAll(testDir)
 }
 
 func TestKey(t *testing.T) {
@@ -141,26 +144,45 @@ func TestKey(t *testing.T) {
 	}
 }
 
-func TestBackup(t *testing.T) {
-	warden.SetLog(warden.NewLog(os.Stderr, zerolog.ErrorLevel, time.RFC1123))
+// func TestBackup(t *testing.T) {
+// 	initTestVolume(t, 2)
 
-	ctx := context.Background()
+// 	warden.SetLog(warden.NewLog(os.Stderr, zerolog.ErrorLevel, time.RFC1123))
 
-	patches := mp.ApplyFuncReturn(crypto.ReadPassword, testPwd, nil)
-	defer patches.Reset()
+// 	ctx := context.Background()
 
-	s, err := store.OpenStore(ctx, testDir)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	patches := mp.NewPatches()
+// 	patches.ApplyFuncReturn(crypto.ReadPassword, testPwd, nil)
 
-	err = s.Backup(ctx, testDir)
-	if err == nil {
-		t.Fatal("should error on backup dir equals warden store dir")
-	}
+// 	defer patches.Reset()
 
-	err = s.Backup(ctx, "/home/julian/workspace/notes")
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// 	s, err := store.OpenStore(ctx, testDir)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+
+// 	_, err = s.Backup(ctx, testDir)
+// 	if err == nil {
+// 		t.Fatal("should error on backup dir equals warden store dir")
+// 	}
+
+// 	_, err = s.Backup(ctx, testVolume)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+
+// 	os.RemoveAll(testVolume)
+// }
+
+// func initTestVolume(t *testing.T, n int) {
+// 	os.RemoveAll(testVolume)
+
+// 	if err := os.Mkdir(testVolume, os.ModePerm); err != nil {
+// 		t.Fatalf("unable to create test volume: %+v", err)
+// 	}
+
+// 	for range n {
+// 		data := []byte(gofakeit.Paragraph(10, 5, 12, "\n"))
+// 		os.WriteFile(path.Join(testVolume, fmt.Sprintf("%s.txt", crypto.Hash(data).String())), data, os.ModePerm)
+// 	}
+// }

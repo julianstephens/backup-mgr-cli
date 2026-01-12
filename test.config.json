@@ -4,7 +4,7 @@
     "max": "1.23"
   },
   "exclude": [
-    "scripts"
+    "cmd"
   ],
   "env": {
     "TEST_WITH_XGO": "true"

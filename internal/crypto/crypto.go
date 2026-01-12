@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
@@ -23,15 +24,16 @@ type Key struct {
 }
 
 const (
+	KeySize         = chacha20poly1305.KeySize
 	passwordEntropy = 60
 	saltSize        = 32
-	keySize         = chacha20poly1305.KeySize
 	nonceSize       = chacha20poly1305.NonceSizeX
 )
 
 var (
 	ErrInvalidSalt       = errors.New("invalid salt")
 	ErrInvalidRandomSize = errors.New("cannot generate random array of zero length")
+	ErrInvalidKeyLen     = fmt.Errorf("key data must be length %d", KeySize)
 )
 
 func Hash(data []byte) warden.ID {
@@ -66,11 +68,9 @@ func NewIDKey(params Params, password string, salt []byte) (key *Key, err error)
 }
 
 // NewSessionKey generates a new random file encryption key
-func NewSessionKey(salt []byte) (key *Key, err error) {
-	validateSaltLen(salt)
-
-	key = &Key{Data: make([]byte, keySize)}
-	r, err := NewRandom(keySize)
+func NewSessionKey() (key *Key, err error) {
+	key = &Key{Data: make([]byte, KeySize)}
+	r, err := NewRandom(KeySize)
 	if err != nil {
 		return
 	}
@@ -200,4 +200,15 @@ func ReadPassword() (string, error) {
 	}
 
 	return pwd, nil
+}
+
+func LoadKey(data []byte) (*Key, error) {
+	if len(data) != KeySize {
+		return nil, ErrInvalidKeyLen
+	}
+	return &Key{Data: data}, nil
+}
+
+func (k *Key) Equals(key *Key) bool {
+	return bytes.Equal(k.Data, key.Data)
 }

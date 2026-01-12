@@ -8,9 +8,9 @@ import (
 	"io"
 )
 
-const idSize = sha256.Size
+const IdSize = sha256.Size
 
-type ID [idSize]byte
+type ID [IdSize]byte
 
 func NewID() ID {
 	id := ID{}
@@ -22,7 +22,7 @@ func NewID() ID {
 }
 
 func ParseID(data string) (ID, error) {
-	if len(data) != hex.EncodedLen(idSize) {
+	if len(data) != hex.EncodedLen(IdSize) {
 		return ID{}, fmt.Errorf("invalid id %q of length %d", data, len(data))
 	}
 

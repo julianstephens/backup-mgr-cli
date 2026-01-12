@@ -8,20 +8,12 @@ import (
 	"testing"
 
 	mp "github.com/agiledragon/gomonkey/v2"
+	"github.com/xhd2015/xgo/runtime/mock"
 	"golang.org/x/term"
 
 	. "github.com/julianstephens/warden/internal/crypto"
 	"github.com/julianstephens/warden/internal/warden"
-	"github.com/xhd2015/xgo/runtime/mock"
 )
-
-// func assertEqual[T comparable](t *testing.T, expected T, actual T) {
-// 	t.Helper()
-// 	if expected == actual {
-// 		return
-// 	}
-// 	t.Errorf("expected (%+v) is not equal to actual (%+v)", expected, actual)
-// }
 
 func assertSliceEqual[T comparable](t *testing.T, expected []T, actual []T) {
 	t.Helper()
@@ -129,9 +121,7 @@ func TestNewIDKey(t *testing.T) {
 }
 
 func TestEncryptDecrypt(t *testing.T) {
-	salt := NewSalt()
-
-	key, err := NewSessionKey(salt)
+	key, err := NewSessionKey()
 	if err != nil {
 		t.Errorf("failed to create new encryption key: %+v", err)
 	}

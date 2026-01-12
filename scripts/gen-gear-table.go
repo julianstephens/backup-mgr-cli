@@ -1,10 +1,8 @@
 package scripts
 
 import (
-	"fmt"
-	"time"
-
 	"math/rand"
+	"time"
 )
 
 type GT struct{}
@@ -23,14 +21,12 @@ func add(val uint64) {
 	gearTable[val] = true
 }
 
-func Run() {
+func Run() []uint64 {
 	for i := 0; i < 256; i++ {
 		s := rand.NewSource(time.Now().UnixNano())
 		r := rand.New(s)
 		add(r.Uint64())
 	}
 
-	for _, m := range masterTable {
-		fmt.Printf("%d, ", m)
-	}
+	return masterTable
 }

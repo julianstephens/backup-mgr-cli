@@ -5,7 +5,6 @@ go 1.23.2
 require (
 	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/alecthomas/kong v1.2.1
-	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b
 	github.com/jedib0t/go-pretty/v6 v6.6.1
 	github.com/pkg/errors v0.9.1
 	github.com/wagslane/go-password-validator v0.3.0
@@ -15,7 +14,12 @@ require (
 
 require github.com/xhd2015/xgo/runtime v1.0.52
 
+require github.com/brianvoe/gofakeit/v7 v7.1.2
+
+require github.com/stretchr/testify v1.9.0 // indirect
+
 require (
+	github.com/klauspost/compress v1.17.11
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect

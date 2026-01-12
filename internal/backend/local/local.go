@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	pkgerr "github.com/pkg/errors"
 
@@ -103,7 +104,7 @@ func (l *Local) Save(ctx context.Context, event common.Event, reader common.IRea
 		return fmt.Errorf("got invalid event type: %s", event.Type.String())
 	}
 
-	return nil
+	return fmt.Errorf("got invalid event type: %s", event.Type.String())
 }
 
 func (l *Local) ListSnapshots(ctx context.Context) ([]storage.Snapshot, error) {
@@ -132,4 +133,28 @@ func (l *Local) ListSnapshots(ctx context.Context) ([]storage.Snapshot, error) {
 	}
 
 	return snaps, nil
+}
+
+func (l *Local) Exists(ctx context.Context, resource_type string, resource_id string) (bool, error) {
+	dirs := map[string]string{
+		"masterkey": "keys",
+		"config":    ".",
+		"blob":      "blobs",
+	}
+	dir := dirs[resource_type]
+	if dir == "" {
+		return false, warden.InvalidArgumentError{Expecting: strings.Join(common.Resources, ", "), Got: resource_type}
+	}
+
+	if resource_id == "" {
+		return false, warden.InvalidArgumentError{Expecting: "resource id", Got: "empty string"}
+	}
+
+	p := path.Join(l.location, dirs[resource_type], resource_id)
+
+	if _, err := os.Stat(p); err == nil {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
